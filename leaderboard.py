@@ -26,6 +26,23 @@ class Leaderboard:
 
         return json.dumps(self.usernames)
 
+    def get_user_stats(redis_conn, downloader_name):
+    """
+    Return dict with total items, total bytes, and time-series chart data for a given downloader.
+    """
+    items = redis_conn.hget("downloader_count", downloader_name) or 0
+    bytes_ = redis_conn.hget("downloader_bytes", downloader_name) or 0
+    chart = redis_conn.lrange(f"downloader_chartdata:{downloader_name}", 0, -1)
+    # parse chart entries ("[timestamp,bytes]")
+    chart_data = [json.loads(x) for x in chart]
+    return {
+        "downloader": downloader_name,
+        "items": int(items),
+        "bytes": int(bytes_),
+        "chart": chart_data
+    }
+
+
     def loadfile(filepath):
         """Get leaderboard stats from save file"""
 
